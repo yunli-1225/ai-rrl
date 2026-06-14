@@ -42,9 +42,20 @@ export const SkillSchema = z.object({
   proficiency: z.string().default(''),
 });
 
+export const SchoolActivitySchema = z.object({
+  role: z.string().default(''),
+  organization: z.string().default(''),
+  startDate: z.string().default(''),
+  endDate: z.string().default(''),
+  description: z.string().default(''),
+});
+
 export const PortfolioSchema = z.object({
   title: z.string().default(''),
   link: z.string().default(''),
+  fileData: z.string().default(''),
+  fileType: z.string().default(''),
+  fileName: z.string().default(''),
 });
 
 export const UserDataSchema = z.object({
@@ -54,6 +65,7 @@ export const UserDataSchema = z.object({
   projects: z.array(ProjectSchema).default([]),
   skills: z.array(SkillSchema).default([]),
   certificates: z.array(z.string()).default([]),
+  schoolActivities: z.array(SchoolActivitySchema).default([]),
   portfolio: z.array(PortfolioSchema).default([]),
   rawResume: z.string().default(''),
 });
