@@ -9,6 +9,9 @@ export const PersonalSchema = z.object({
   base: z.string().default(''),
   politics: z.string().default(''),
   status: z.string().default(''),
+  求职意向: z.string().default(''),
+  性别: z.string().default(''),
+  实习月数: z.string().default(''),
 });
 
 export const EducationSchema = z.object({
@@ -68,6 +71,7 @@ export const UserDataSchema = z.object({
   schoolActivities: z.array(SchoolActivitySchema).default([]),
   portfolio: z.array(PortfolioSchema).default([]),
   rawResume: z.string().default(''),
+  自我评价: z.string().default(''),
 });
 
 export const GenerateRequestSchema = z.object({
@@ -78,86 +82,35 @@ export const GenerateRequestSchema = z.object({
 
 // ===== Response Schemas =====
 
-export const StarBulletSchema = z.object({
-  raw: z.string(),
-  starCompleteness: z.number().min(0).max(4),
-  missing: z.array(z.string()),
-  highlightedNumbers: z.array(z.string()),
+export const ProjectExperienceSchema = z.object({
+  公司: z.string().default(''),
+  职位: z.string().default(''),
+  时间: z.string().default(''),
+  描述: z.array(z.string()).default([]),
 });
 
-export const StarredItemSchema = z.object({
-  title: z.string(),
-  subtitle: z.string(),
-  date: z.string(),
-  bullets: z.array(StarBulletSchema),
-  matchScore: z.number().min(0).max(1),
-});
-
-export const EducationResultSchema = z.object({
-  school: z.string(),
-  major: z.string(),
-  degree: z.string(),
-  gpa: z.string().optional(),
-  date: z.string(),
-  highlight: z.boolean(),
-});
-
-export const SkillResultSchema = z.object({
-  name: z.string(),
-  proficiency: z.string(),
-  matched: z.boolean(),
-});
-
-export const PortfolioResultSchema = z.object({
-  title: z.string(),
-  link: z.string().optional(),
-  matched: z.boolean(),
-});
-
-export const MissingKeywordSchema = z.object({
-  word: z.string(),
-  importance: z.enum(['high', 'medium', 'low']),
-  suggestion: z.string(),
-});
-
-export const STARCheckSchema = z.object({
-  item: z.string(),
-  s: z.boolean(),
-  t: z.boolean(),
-  a: z.boolean(),
-  r: z.boolean(),
-  suggestion: z.string(),
-});
-
-export const GapBoosterSchema = z.object({
-  keyword: z.string(),
-  level: z.enum(['high', 'medium', 'low']),
-  tip: z.string(),
-  category: z.enum(['skill', 'project', 'cert', 'experience']),
-});
-
-export const AnalysisSchema = z.object({
-  matchedCount: z.number(),
-  totalCount: z.number(),
-  matchRate: z.number().min(0).max(1),
-  missingKeywords: z.array(MissingKeywordSchema),
-  starChecklist: z.array(STARCheckSchema),
-  gapBoosters: z.array(GapBoosterSchema),
-});
-
-export const ResumeResultSchema = z.object({
-  summary: z.string(),
-  workExperiences: z.array(StarredItemSchema),
-  projects: z.array(StarredItemSchema),
-  education: z.array(EducationResultSchema),
-  skills: z.array(SkillResultSchema),
-  certificates: z.array(z.string()),
-  portfolio: z.array(PortfolioResultSchema),
-  analysis: AnalysisSchema,
+export const OptimizedResumeSchema = z.object({
+  简历标题: z.string().default(''),
+  基础信息: z.record(z.string(), z.string()).default({}),
+  教育经历: z.array(z.object({
+    学校: z.string().default(''),
+    专业: z.string().default(''),
+    学历: z.string().default(''),
+    时间: z.string().default(''),
+  })).default([]),
+  实习项目经历: z.array(ProjectExperienceSchema).default([]),
+  专业技能标签: z.array(z.string()).default([]),
+  岗位匹配评分: z.object({
+    总分: z.number().default(0),
+    技能匹配分: z.number().default(0),
+    行业经验分: z.number().default(0),
+  }).default({总分: 0, 技能匹配分: 0, 行业经验分: 0}),
+  模块排序: z.array(z.string()).default([]),
+  优化后完整简历文本: z.string().default(''),
 });
 
 // ===== Inferred Types =====
-export type ResumeResult = z.infer<typeof ResumeResultSchema>;
+export type OptimizedResume = z.infer<typeof OptimizedResumeSchema>;
 export type UserData = z.infer<typeof UserDataSchema>;
 export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
 export type TemplateType = 'zh-classic' | 'zh-simple' | 'en-modern' | 'en-creative';

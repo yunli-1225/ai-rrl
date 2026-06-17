@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { UserData } from '@/lib/schema';
 import { KEYWORD_LIB } from '@/lib/keywords';
 
+
 const STORAGE_KEY = 'ai-rrl-material-library';
 
 const DEFAULT_USER_DATA: UserData = {
-  personal: { name: '', phone: '', email: '', base: '', politics: '', status: '' },
+  personal: { name: '', phone: '', email: '', base: '', politics: '', status: '', 求职意向: '', 性别: '', 实习月数: '' },
   education: [],
   work: [],
   projects: [],
@@ -16,6 +17,7 @@ const DEFAULT_USER_DATA: UserData = {
   schoolActivities: [],
   portfolio: [],
   rawResume: '',
+  自我评价: '',
 };
 
 interface Props { key?: number }
@@ -135,11 +137,10 @@ function ProfileCompleteness({ data }: { data: UserData }) {
     if (data.education.length > 0) total += 12;
     if (data.work.length > 0) total += 18;
     if (data.projects.length > 0) total += 12;
-    if (data.skills.length > 0) total += 8;
-    if (data.certificates.length > 0) total += 8;
-    if (data.schoolActivities.length > 0) total += 10;
-    if (data.portfolio.length > 0) total += 7;
-    if (data.rawResume.length > 0) total += 5;
+    if ((data.skills?.length ?? 0) > 0) total += 8;
+    if ((data.certificates?.length ?? 0) > 0) total += 8;
+    if ((data.schoolActivities?.length ?? 0) > 0) total += 10;
+    if ((data.rawResume?.length ?? 0) > 0) total += 5;
     return Math.min(total, 100);
   }, [data]);
   const message = score >= 80 ? '🔥 非常完整，直接生成吧！'
@@ -175,6 +176,13 @@ function PersonalInfoSection({ data, onChange }: { data: UserData; onChange: (d:
       <div className="field-grid">
         <input placeholder="姓名" value={data.personal.name} onChange={e => set('name', e.target.value)} />
         <input placeholder="电话" value={data.personal.phone} onChange={e => set('phone', e.target.value)} />
+        <select value={(data.personal as any).性别 || ''} onChange={e => set('性别', e.target.value)}>
+          <option value="">性别</option>
+          <option value="男">男</option>
+          <option value="女">女</option>
+          <option value="其他">其他</option>
+        </select>
+        <input placeholder="可实习X个月（如3、6）" value={(data.personal as any).实习月数 || ''} onChange={e => set('实习月数', e.target.value)} />
         <div style={{ gridColumn: '1 / -1' }}>
           <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, letterSpacing: '0.5px' }}>邮箱</div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
@@ -192,6 +200,7 @@ function PersonalInfoSection({ data, onChange }: { data: UserData; onChange: (d:
             ))}
           </div>
         </div>
+        <input placeholder="求职意向（如：Java开发、前端实习生）" value={(data.personal as any).求职意向 || ''} onChange={e => set('求职意向', e.target.value)} />
         <input placeholder="Base地" value={data.personal.base} onChange={e => set('base', e.target.value)} />
         <select value={data.personal.politics} onChange={e => set('politics', e.target.value)}>
           <option value="">政治面貌</option>
@@ -201,6 +210,27 @@ function PersonalInfoSection({ data, onChange }: { data: UserData; onChange: (d:
           <option value="">当前身份</option>
           <option value="应届生">应届生</option><option value="在校生">在校生</option><option value="已工作">已工作</option><option value="待业">待业</option>
         </select>
+        <div style={{ gridColumn: '1 / -1', borderTop: '1px dashed #e2e8f0', paddingTop: 10, marginTop: 4 }}>
+          <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, letterSpacing: '0.5px' }}>个人证件照（选填）</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {(data.personal as any).照片 ? (
+              <div style={{ position: 'relative', width: 80, height: 104 }}>
+                <img src={(data.personal as any).照片} alt="证件照" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4, border: '1px solid #e2e8f0' }} />
+                <button onClick={() => set('照片', '')} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', border: 'none', background: '#ef4444', color: '#fff', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
+            ) : (
+              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 80, height: 104, border: '2px dashed #cbd5e1', borderRadius: 4, cursor: 'pointer', background: '#f8fafc', fontSize: '0.62rem', color: '#94a3b8', gap: 4 }}>
+                <span style={{ fontSize: '1.2rem' }}>📷</span>
+                <span>上传照片</span>
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+                  const file = e.target.files?.[0]; if (!file) return;
+                  const r = new FileReader(); r.onload = (ev) => set('照片', ev.target?.result as string); r.readAsDataURL(file); e.target.value = '';
+                }} />
+              </label>
+            )}
+            <span style={{ fontSize: '0.68rem', color: '#94a3b8', lineHeight: 1.4 }}>支持 JPG/PNG，建议 100×130px 比例</span>
+          </div>
+        </div>
       </div>
     </CollapsibleOptionCard>
   );
@@ -286,13 +316,13 @@ function ProjectSection({ data, onChange }: { data: UserData; onChange: (d: User
 
 // ===== School Activities =====
 function SchoolActivitiesSection({ data, onChange }: { data: UserData; onChange: (d: UserData) => void }) {
-  const add = () => onChange({ ...data, schoolActivities: [...data.schoolActivities, { role: '', organization: '', startDate: '', endDate: '', description: '' }] });
-  const remove = (i: number) => onChange({ ...data, schoolActivities: data.schoolActivities.filter((_, idx) => idx !== i) });
-  const set = (i: number, field: string, val: string) => { const a = [...data.schoolActivities]; a[i] = { ...a[i], [field]: val }; onChange({ ...data, schoolActivities: a }); };
+  const add = () => onChange({ ...data, schoolActivities: [...(data.schoolActivities ?? []), { role: '', organization: '', startDate: '', endDate: '', description: '' }] });
+  const remove = (i: number) => onChange({ ...data, schoolActivities: (data.schoolActivities ?? []).filter((_, idx) => idx !== i) });
+  const set = (i: number, field: string, val: string) => { const a = [...(data.schoolActivities ?? [])]; a[i] = { ...a[i], [field]: val }; onChange({ ...data, schoolActivities: a }); };
   return (
-    <CollapsibleOptionCard icon="👥" title="学校经历" count={data.schoolActivities.length}>
+    <CollapsibleOptionCard icon="👥" title="学校经历" count={data.schoolActivities?.length ?? 0}>
       <div className="hint-text" style={{ marginBottom: 8 }}>班干部、学生会、社团、校园活动等经历</div>
-      {data.schoolActivities.map((sa, i) => (
+      {data.schoolActivities?.map((sa, i) => (
         <div key={i} className="entry-block">
           <div className="field-grid" style={{ marginBottom: 6 }}>
             <input placeholder="职位 / 角色（如：班长、学生会主席）" value={sa.role} onChange={e => set(i, 'role', e.target.value)} />
@@ -322,15 +352,15 @@ function SkillsSection({ data, onChange }: { data: UserData; onChange: (d: UserD
     };
     return Object.entries(KEYWORD_LIB).map(([k, v]) => ({ label: labelMap[k] || k, skills: v }));
   }, []);
-  const addSkill = () => { const n = newName.trim(); if (!n || data.skills.some(s => s.name === n)) return; onChange({ ...data, skills: [...data.skills, { name: n, proficiency: newProf }] }); setNewName(''); };
-  const removeSkill = (i: number) => onChange({ ...data, skills: data.skills.filter((_, idx) => idx !== i) });
-  const addSuggested = (name: string) => { if (data.skills.some(s => s.name === name)) return; onChange({ ...data, skills: [...data.skills, { name, proficiency: '熟练' }] }); };
+  const addSkill = () => { const n = newName.trim(); if (!n || (data.skills ?? []).some(s => s.name === n)) return; onChange({ ...data, skills: [...(data.skills ?? []), { name: n, proficiency: newProf }] }); setNewName(''); };
+  const removeSkill = (i: number) => onChange({ ...data, skills: (data.skills ?? []).filter((_, idx) => idx !== i) });
+  const addSuggested = (name: string) => { if ((data.skills ?? []).some(s => s.name === name)) return; onChange({ ...data, skills: [...(data.skills ?? []), { name, proficiency: '熟练' }] }); };
 
   return (
-    <CollapsibleOptionCard icon="🔧" title="技能列表" count={data.skills.length}>
-      {data.skills.length === 0 && <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', padding: '4px 0', display: 'block' }}>还没有添加技能，在下方输入或从推荐中选择</span>}
+    <CollapsibleOptionCard icon="🔧" title="技能列表" count={data.skills?.length ?? 0}>
+      {(data.skills?.length ?? 0) === 0 && <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', padding: '4px 0', display: 'block' }}>还没有添加技能，在下方输入或从推荐中选择</span>}
       <div className="skill-chips">
-        {data.skills.map((skill, i) => (
+        {data.skills?.map((skill, i) => (
           <div key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px 4px 14px', borderRadius: 20, border: '2px solid #f59e0b', background: '#fffbeb', fontSize: '0.78rem', fontWeight: 500, color: '#92400e', transition: 'all 0.2s', animation: 'chipPop 0.25s ease' }}>
             <span>{skill.name}</span>
             <span style={{ fontSize: '0.65rem', background: '#fde68a', padding: '1px 7px', borderRadius: 10, color: '#92400e', fontWeight: 600 }}>{skill.proficiency}</span>
@@ -345,19 +375,19 @@ function SkillsSection({ data, onChange }: { data: UserData; onChange: (d: UserD
         <select value={newProf} onChange={e => setNewProf(e.target.value)}>{PROFICIENCIES.map(p => <option key={p} value={p}>{p}</option>)}</select>
         <button className="btn btn-sm btn-outline" onClick={addSkill}>添加</button>
       </div>
-      {data.skills.length < 6 && (
+      {(data.skills?.length ?? 0) < 6 && (
         <div className="skill-suggestions">
           <div className="sug-title">💡 选择技能快速补充</div>
           {skillSuggestions.map(group => {
-            const avail = group.skills.filter(s => !data.skills.some(es => es.name === s));
+            const avail = group.skills.filter(s => !(data.skills ?? []).some(es => es.name === s));
             if (avail.length === 0) return null;
             return (
               <div key={group.label} className="sug-category">
                 <div className="sug-cat-label">{group.label}</div>
                 <div className="sug-grid">
                   {avail.slice(0, 12).map(skill => (
-                    <div key={skill} className={`sug-chip${data.skills.some(s => s.name === skill) ? ' selected' : ''}`} onClick={() => addSuggested(skill)}>
-                      <span className="sug-checkbox">{data.skills.some(s => s.name === skill) ? '✓' : ''}</span>
+                    <div key={skill} className={`sug-chip${(data.skills ?? []).some(s => s.name === skill) ? ' selected' : ''}`} onClick={() => addSuggested(skill)}>
+                      <span className="sug-checkbox">{(data.skills ?? []).some(s => s.name === skill) ? '✓' : ''}</span>
                       {skill}
                     </div>
                   ))}
@@ -374,15 +404,15 @@ function SkillsSection({ data, onChange }: { data: UserData; onChange: (d: UserD
 // ===== Certificates =====
 function CertSection({ data, onChange }: { data: UserData; onChange: (d: UserData) => void }) {
   const [cc, setCc] = useState('');
-  const toggle = (c: string) => { const e = data.certificates.includes(c); onChange({ ...data, certificates: e ? data.certificates.filter(x => x !== c) : [...data.certificates, c] }); };
-  const addC = () => { const t = cc.trim(); if (t && !data.certificates.includes(t)) { onChange({ ...data, certificates: [...data.certificates, t] }); setCc(''); } };
+  const toggle = (c: string) => { const e = (data.certificates ?? []).includes(c); onChange({ ...data, certificates: e ? (data.certificates ?? []).filter(x => x !== c) : [...(data.certificates ?? []), c] }); };
+  const addC = () => { const t = cc.trim(); if (t && !(data.certificates ?? []).includes(t)) { onChange({ ...data, certificates: [...(data.certificates ?? []), t] }); setCc(''); } };
   return (
-    <CollapsibleOptionCard icon="📜" title="证书与资质" count={data.certificates.length}>
+    <CollapsibleOptionCard icon="📜" title="证书与资质" count={data.certificates?.length ?? 0}>
       <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>点击选择已有证书（可多选）：</div>
       <div className="cert-grid">
         {COMMON_CERTIFICATES.map(cert => (
-          <label key={cert} className={`cert-checkbox ${data.certificates.includes(cert) ? 'checked' : ''}`}>
-            <input type="checkbox" checked={data.certificates.includes(cert)} onChange={() => toggle(cert)} />{cert}
+          <label key={cert} className={`cert-checkbox ${(data.certificates ?? []).includes(cert) ? 'checked' : ''}`}>
+            <input type="checkbox" checked={(data.certificates ?? []).includes(cert)} onChange={() => toggle(cert)} />{cert}
           </label>
         ))}
       </div>
@@ -390,9 +420,9 @@ function CertSection({ data, onChange }: { data: UserData; onChange: (d: UserDat
         <input placeholder="输入其他证书名称" value={cc} onChange={e => setCc(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addC(); }}} style={{ flex: 1 }} />
         <button className="btn btn-sm btn-outline" onClick={addC}>添加</button>
       </div>
-      {data.certificates.length > 0 && (
+      {(data.certificates?.length ?? 0) > 0 && (
         <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {data.certificates.map(c => (
+          {data.certificates?.map(c => (
             <span key={c} style={{ padding: '2px 10px', borderRadius: 12, fontSize: '0.73rem', background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => toggle(c)} title="点击移除">{c} ✕</span>
           ))}
         </div>
@@ -402,51 +432,12 @@ function CertSection({ data, onChange }: { data: UserData; onChange: (d: UserDat
   );
 }
 
-// ===== Portfolio =====
-function PortfolioSection({ data, onChange }: { data: UserData; onChange: (d: UserData) => void }) {
-  const addItem = () => onChange({ ...data, portfolio: [...data.portfolio, { title: '', link: '', fileData: '', fileType: '', fileName: '' }] });
-  const removeItem = (i: number) => onChange({ ...data, portfolio: data.portfolio.filter((_, idx) => idx !== i) });
-  const setItem = (i: number, field: string, val: string) => { const a = [...data.portfolio]; a[i] = { ...a[i], [field]: val }; onChange({ ...data, portfolio: a }); };
-  const handleFile = (i: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('文件过大，请选择5MB以内的文件'); return; }
-    const r = new FileReader();
-    r.onload = (ev) => { const a = [...data.portfolio]; a[i] = { ...a[i], fileData: ev.target?.result as string, fileType: file.type, fileName: file.name }; onChange({ ...data, portfolio: a }); };
-    r.readAsDataURL(file); e.target.value = '';
-  };
-  const tips = [
-    { icon: '📱', text: 'APP Store / 小程序' }, { icon: '🐙', text: 'GitHub / Gitee' },
-    { icon: '📝', text: '博客 / 公众号' }, { icon: '🎨', text: 'Behance / 站酷' }, { icon: '📊', text: '数据看板 / BI' },
-  ];
-
+// ===== 自我评价 =====
+function SelfEvaluationSection({ data, onChange }: { data: UserData; onChange: (d: UserData) => void }) {
   return (
-    <CollapsibleOptionCard icon="🖼️" title="作品集" count={data.portfolio.length}>
-      <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginBottom: 8, lineHeight: 1.6 }}>
-        {tips.map((t, i) => <span key={i} style={{ marginRight: 6, whiteSpace: 'nowrap' }}>{t.icon} {t.text}</span>)}
-      </div>
-      {data.portfolio.map((item, i) => (
-        <div key={i} className="entry-block" style={{ border: '2px solid #f59e0b', background: '#fffbeb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontFamily: 'var(--font-accent)', fontWeight: 700, fontSize: '0.82rem', color: '#92400e', letterSpacing: '0.5px' }}>NO.{i + 1}</span>
-            <button className="btn btn-sm btn-secondary" onClick={() => removeItem(i)}>🗑️ 删除</button>
-          </div>
-          <div className="field-grid" style={{ marginBottom: 6 }}>
-            <input placeholder="作品名称" value={item.title} onChange={e => setItem(i, 'title', e.target.value)} />
-            <input placeholder="链接 / 说明（可选）" value={item.link} onChange={e => setItem(i, 'link', e.target.value)} />
-          </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6 }}>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', fontSize: '0.7rem', borderRadius: 6, border: '1px dashed #f59e0b', background: '#fffbeb', color: '#92400e', cursor: 'pointer', transition: 'all 0.2s' }}>
-              📎 上传附件
-              <input type="file" accept="image/*,.pdf,.ppt,.pptx,.xlsx,.xls" onChange={e => handleFile(i, e)} style={{ display: 'none' }} />
-            </label>
-            {item.fileData && <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>✅ {item.fileName || '已上传'}</span>}
-          </div>
-          {item.fileData && item.fileType?.startsWith('image/') && (
-            <div style={{ marginTop: 6 }}><img src={item.fileData} alt={item.title || '作品'} style={{ maxHeight: 80, borderRadius: 4, objectFit: 'contain' }} /></div>
-          )}
-        </div>
-      ))}
-      <div className="add-row"><button className="btn btn-sm btn-outline" onClick={addItem}>+ 添加 NO.{data.portfolio.length + 1}</button></div>
+    <CollapsibleOptionCard icon="⭐" title="自我评价（选填）" omit>
+      <textarea placeholder="输入你的自我评价、个人优势、职业目标等，AI将据此生成个人评价模块" value={(data as any).自我评价 || ''} onChange={e => onChange({ ...data, 自我评价: e.target.value })} rows={5} />
+      <div className="hint-text">💡 可直接粘贴已有的自我评价文本，AI会提取关键信息并优化</div>
     </CollapsibleOptionCard>
   );
 }
@@ -455,63 +446,9 @@ function PortfolioSection({ data, onChange }: { data: UserData; onChange: (d: Us
 function RawResumeSection({ data, onChange }: { data: UserData; onChange: (d: UserData) => void }) {
   return (
     <CollapsibleOptionCard icon="📄" title="原始简历全文（备选）" omit>
-      <textarea placeholder="如果已有完整简历，可粘贴在这里作为补充素材源，AI会自动提取关键信息" value={data.rawResume} onChange={e => onChange({ ...data, rawResume: e.target.value })} rows={6} />
+      <textarea placeholder="粘贴你的简历全文（支持任意长度）" value={data.rawResume} onChange={e => onChange({ ...data, rawResume: e.target.value })} rows={20} />
       <div className="hint-text">💡 粘贴已有简历全文，AI会提取关键信息并按照所选模板重新优化</div>
     </CollapsibleOptionCard>
-  );
-}
-
-// ===== Import Zone (top-level) =====
-const ACCEPTED_FORMATS = ['.json', '.pdf', '.xlsx', '.xls', '.doc', '.docx', '.ppt', '.pptx', '.txt'];
-
-interface ImportedFile { name: string; type: string; status: string }
-
-function ImportTop({ data, onChange }: { data: UserData; onChange: (d: UserData) => void }) {
-  const [files, setFiles] = useState<ImportedFile[]>([]);
-  const [msg, setMsg] = useState('');
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file'; input.accept = ACCEPTED_FORMATS.join(','); input.multiple = true;
-    input.onchange = async (e) => {
-      const fls = (e.target as HTMLInputElement).files; if (!fls?.length) return;
-      const imp: ImportedFile[] = []; let appendRaw = ''; let cnt = 0;
-      for (const f of Array.from(fls)) {
-        const ext = f.name.split('.').pop()?.toLowerCase(); cnt++;
-        if (ext === 'json') {
-          try { const t = await f.text(); const p = JSON.parse(t) as UserData; onChange({ ...data, ...p, skills: [...data.skills, ...(p.skills?.filter((ns: { name: string }) => !data.skills.some(es => es.name === ns.name)) || [])], certificates: [...new Set([...data.certificates, ...(p.certificates || [])])] }); imp.push({ name: f.name, type: 'JSON', status: '✅ 已合并' }); } catch { imp.push({ name: f.name, type: 'JSON', status: '⏳ 已加载' }); }
-        } else {
-          try { const t = await f.text(); const ct = t.replace(/[^\x20-\x7E一-鿿\s]/g, ' ').trim(); if (ct.length > 50) { appendRaw += `\n\n[来自 ${f.name}]\n${ct.slice(0, 10000)}`; imp.push({ name: f.name, type: ext?.toUpperCase() || '', status: '✅ 已加载' }); } else imp.push({ name: f.name, type: ext?.toUpperCase() || '', status: '⏳ 已读取' }); } catch { imp.push({ name: f.name, type: ext?.toUpperCase() || '', status: '⏳ 已读取' }); }
-        }
-      }
-      if (appendRaw) onChange({ ...data, rawResume: data.rawResume + appendRaw });
-      setFiles(p => [...p, ...imp]);
-      const ok = imp.filter(f => f.status.includes('✅')).length;
-      setMsg(ok > 0 ? `✅ 成功导入 ${ok}/${cnt} 个文件` : '⏳ 文件已读取，可手动粘贴到素材区');
-      setTimeout(() => setMsg(''), 4000);
-    };
-    input.click();
-  };
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div className="import-zone" onClick={handleImport}>
-        <div className="import-icon">📂</div>
-        <div className="import-text">
-          <div className="import-title" style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.88rem', letterSpacing: '1px' }}>点击上传原始简历文件</div>
-        </div>
-      </div>
-      {files.length > 0 && (
-        <div className="import-files-list">
-          {files.map((f, i) => (
-            <div key={i} className="import-file-item">
-              <span className="ifi-icon">{f.type === 'JSON' ? '📋' : '📄'}</span>
-              <span className="ifi-name">{f.name}</span>
-              <span className="ifi-status" style={{ color: f.status.includes('✅') ? 'var(--success)' : 'var(--navy)' }}>{f.status}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      {msg && <div style={{ fontSize: '0.72rem', padding: '6px 10px', borderRadius: 'var(--radius-xs)', background: msg.includes('✅') ? 'var(--success-bg)' : '#fef3c7', color: msg.includes('✅') ? 'var(--success)' : 'var(--warning)', marginBottom: 4 }}>{msg}</div>}
-    </div>
   );
 }
 
@@ -522,7 +459,6 @@ export default function MaterialLibrary(_props: Props) {
   const handleChange = useCallback((d: UserData) => { setData(d); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch {} }, []);
   return (
     <div>
-      <ImportTop data={data} onChange={handleChange} />
       <ProfileCompleteness data={data} />
       <PersonalInfoSection data={data} onChange={handleChange} />
       <EducationSection data={data} onChange={handleChange} />
@@ -531,7 +467,7 @@ export default function MaterialLibrary(_props: Props) {
       <ProjectSection data={data} onChange={handleChange} />
       <SkillsSection data={data} onChange={handleChange} />
       <CertSection data={data} onChange={handleChange} />
-      <PortfolioSection data={data} onChange={handleChange} />
+      <SelfEvaluationSection data={data} onChange={handleChange} />
       <RawResumeSection data={data} onChange={handleChange} />
     </div>
   );

@@ -3,10 +3,11 @@
 interface Props {
   loading: boolean;
   disabled?: boolean;
+  loadingText?: string;
   onClick: () => void;
 }
 
-export default function GenerateButton({ loading, disabled, onClick }: Props) {
+export default function GenerateButton({ loading, disabled, onClick, loadingText = '正在生成简历...' }: Props) {
   return (
     <button
       className="btn btn-primary"
@@ -16,7 +17,7 @@ export default function GenerateButton({ loading, disabled, onClick }: Props) {
       {loading ? (
         <>
           <span className="spinner" />
-          正在生成简历...
+          {loadingText}
         </>
       ) : (
         '🚀 开始定制简历'
@@ -24,3 +25,4 @@ export default function GenerateButton({ loading, disabled, onClick }: Props) {
     </button>
   );
 }
+ 
