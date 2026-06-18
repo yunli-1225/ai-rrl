@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { NextRequest, NextResponse } from 'next/server';
 import { callDeepSeek, validateEnvOrThrow } from '@/lib/ai/factory';
 import { logger } from '@/lib/logger';

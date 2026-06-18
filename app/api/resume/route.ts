@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { NextRequest, NextResponse } from 'next/server';
 import { saveResume, listResumesPaginated, getResume, deleteResume, clearAllResumes } from '@/lib/db';
 import { logger } from '@/lib/logger';

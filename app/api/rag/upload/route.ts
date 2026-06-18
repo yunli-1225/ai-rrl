@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { NextRequest, NextResponse } from 'next/server';
 import { chunkDocument, embedTexts, addRecords, loadFromDisk, getStats, clearAll, removeBySource, getSources } from '@/lib/rag';
 import type { VectorRecord } from '@/lib/rag';
