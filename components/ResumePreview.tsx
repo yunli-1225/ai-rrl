@@ -207,6 +207,50 @@ export default function ResumePreview({ result, templateId }: Props) {
     const resumeData = result.基础信息 || {};
     const sections = parseResumeSections(fullText);
 
+    // 兜底：如果 AI 未输出教育经历模块，从 JSON 数据生成
+    if (!sections.has('education') || !sections.get('education')?.trim()) {
+      const eduData = result.教育经历 || [];
+      if (eduData.length > 0) {
+        let eduText = '';
+        for (const edu of eduData) {
+          const school = edu['学校'] || '';
+          const major = edu['专业'] || '';
+          const degree = edu['学历'] || '';
+          const time = edu['时间'] || '';
+          if (school || major || degree || time) {
+            eduText += `${school} | ${major} | ${degree} | ${time}\n主修课程：${major}核心课程\n`;
+          }
+        }
+        if (eduText.trim()) sections.set('education', eduText.trim());
+      }
+    }
+
+    // 兜底：如果 AI 未输出工作/实习经历模块，从 JSON 实习项目经历数据生成
+    if (!sections.has('work') || !sections.get('work')?.trim()) {
+      const expData = result.实习项目经历 || [];
+      if (expData.length > 0) {
+        const workItems = expData.filter((e: any) => e['公司'] || e['项目名称']);
+        if (workItems.length > 0) {
+          let workText = '实习/工作经历\n';
+          for (const w of workItems) {
+            const company = (w as any)['公司'] || (w as any)['项目名称'] || '';
+            const role = (w as any)['职位'] || (w as any)['角色'] || '';
+            const time = w['时间'] || '';
+            const descs = w['描述'] || [];
+            if (company || role || time) {
+              workText += `${company} | ${role} | ${time}\n`;
+              if (descs.length > 0) {
+                for (const d of descs) workText += `• ${d}\n`;
+              } else {
+                workText += `• 负责${company}相关工作，完成项目目标\n`;
+              }
+            }
+          }
+          if (workText.trim().length > 50) sections.set('work', workText.trim());
+        }
+      }
+    }
+
     // 从素材 personal 模块读取头部字段，不依赖 AI 输出
     const name = resumeData['姓名'] || '';
     const gender = resumeData['性别'] || '';
