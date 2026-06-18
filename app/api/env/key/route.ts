@@ -1,4 +1,4 @@
-export const runtime = "edge";
+// export const runtime = "edge";
 import { NextRequest, NextResponse } from 'next/server';
 import { setTempApiKey } from '@/lib/ai/factory';
 import { logger } from '@/lib/logger';
