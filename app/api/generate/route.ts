@@ -448,6 +448,7 @@ export async function POST(request: NextRequest) {
           '求职意向': rawPersonal.求职意向 || '',
           '实习月数': rawPersonal.实习月数 || '3',
           '照片': rawPersonal.照片 || '',
+          '自我评价': userData.自我评价 || '',
         };
       }
 

@@ -12,6 +12,7 @@ export const PersonalSchema = z.object({
   求职意向: z.string().default(''),
   性别: z.string().default(''),
   实习月数: z.string().default(''),
+  照片: z.string().default(''),
 });
 
 export const EducationSchema = z.object({

@@ -47,7 +47,7 @@ export const SYSTEM_PROMPT_FULL = `你是一位资深简历优化专家，精通
 2. 实习/工作经历（标识符：work）
 3. 项目经历（标识符：project）
 4. 教育经历（标识符：education）
-5. 个人评价（标识符：evaluation，可选模块，仅当对简历有明显加分时才生成，否则可省略）
+5. 个人评价（标识符：evaluation，必须输出模块）
 自适应排版：优势模块前置。全部内容压缩单页A4。
 
 JSON结构：
@@ -104,7 +104,7 @@ export const SYSTEM_PROMPT_COMPRESSED = `你是一位简历优化专家，精通
 JSON结构：
 {"简历标题":"","基础信息":{},"教育经历":[],"实习项目经历":[],"专业技能标签":[],"岗位匹配评分":{"总分":0,"技能匹配分":0,"行业经验分":0},"模块排序":[],"优化后完整简历文本":""}
 
-模块：skills/work/project/education/evaluation。优势前置，单页A4。`;
+模块：skills/work/project/education/evaluation五个模块全部必须输出，按优势排序，优势前置，单页A4。`;
 
 function buildRAGSection(ragContext?: {
   keywords: string[];

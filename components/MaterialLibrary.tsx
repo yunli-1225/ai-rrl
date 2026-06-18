@@ -8,7 +8,8 @@ import { KEYWORD_LIB } from '@/lib/keywords';
 const STORAGE_KEY = 'ai-rrl-material-library';
 
 const DEFAULT_USER_DATA: UserData = {
-  personal: { name: '', phone: '', email: '', base: '', politics: '', status: '', 求职意向: '', 性别: '', 实习月数: '' },
+  personal: { name: '', phone: '', email: '', base: '', politics: '', status: '', 求职意向: '', 性别: '', 实习月数: '',
+  照片: '' },
   education: [],
   work: [],
   projects: [],

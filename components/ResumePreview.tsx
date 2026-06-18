@@ -248,6 +248,15 @@ export default function ResumePreview({ result, templateId }: Props) {
       body += renderSection(key);
     }
 
+    // 单栏兜底：如果AI未输出评价模块但用户有自我评价数据，生成默认评价
+    if (tpl?.layout === 'single' && !sections.get('evaluation')?.trim()) {
+      const evalText = (resumeData['自我评价'] || result.教育经历?.[0]?.学校 || '');
+      if (evalText) {
+        sections.set('evaluation', evalText);
+        body += renderSection('evaluation');
+      }
+    }
+
     // ═══════════════════════════════════════
     // 双栏排版：左窄栏（照片/姓名/个人简介/自我评价）+ 右宽栏（教育/工作/项目/技能）
     // ═══════════════════════════════════════
