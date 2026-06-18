@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { OptimizedResume } from '@/lib/schema';
 
+// ===== localStorage 操作工具 =====
+
+const HISTORY_KEY = 'ai-rrl-resume-history';
+
 interface ResumeRecord {
   id: number;
   title: string;
@@ -26,6 +30,56 @@ interface ResumeListItem {
   created_at: string;
 }
 
+function loadRecords(): ResumeRecord[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveRecords(records: ResumeRecord[]): void {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(records)); } catch {}
+}
+
+/** 供外部调用的保存函数（page.tsx 生成成功后调用） */
+export function saveResumeToLocal(params: {
+  title: string;
+  resumeJson: string;
+  jdText: string;
+  template: string;
+  userDataJson: string;
+  scoreTotal: number;
+  scoreSkill: number;
+  scoreExperience: number;
+  modelPreference?: string;
+  ragKeywords?: string[];
+}): void {
+  const records = loadRecords();
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const createdAt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const maxId = records.length > 0 ? Math.max(...records.map(r => r.id)) : 0;
+  const record: ResumeRecord = {
+    id: maxId + 1,
+    title: params.title || '未命名简历',
+    resume_json: params.resumeJson,
+    jd_text: params.jdText || '',
+    template: params.template || 'zh-classic',
+    user_data_json: params.userDataJson || '{}',
+    score_total: params.scoreTotal,
+    score_skill: params.scoreSkill,
+    score_experience: params.scoreExperience,
+    model_preference: params.modelPreference || 'deepseek',
+    rag_keywords: params.ragKeywords || [],
+    created_at: createdAt,
+  };
+  records.unshift(record);
+  saveRecords(records);
+}
+
+// ===== 历史面板组件 =====
+
 interface Props {
   onReuse: (record: ResumeRecord) => void;
   refreshKey: number;
@@ -37,27 +91,29 @@ export default function HistoryPanel({ onReuse, refreshKey }: Props) {
   const [items, setItems] = useState<ResumeListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<ResumeRecord | null>(null);
-  const [deleting, setDeleting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  const fetchList = useCallback(async (p: number) => {
+  const fetchList = useCallback((p: number) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/resume?page=${p}&pageSize=${PAGE_SIZE}`);
-      const json = await res.json();
-      if (json.ok) {
-        setItems(json.items || []);
-        setTotalPages(json.totalPages || 1);
-        setTotal(json.total || 0);
-      } else {
-        setError(json.error || '加载失败');
-      }
+      const records = loadRecords();
+      const totalRecords = records.length;
+      const totalPg = Math.max(1, Math.ceil(totalRecords / PAGE_SIZE));
+      const clampedPage = Math.max(1, Math.min(p, totalPg));
+      const offset = (clampedPage - 1) * PAGE_SIZE;
+      const list: ResumeListItem[] = records.slice(offset, offset + PAGE_SIZE).map(r => ({
+        id: r.id, title: r.title, score_total: r.score_total,
+        model_preference: r.model_preference, created_at: r.created_at,
+      }));
+      setItems(list);
+      setTotalPages(totalPg);
+      setTotal(totalRecords);
     } catch {
-      setError('网络异常，请重试');
+      setError('加载失败');
     } finally {
       setLoading(false);
     }
@@ -73,55 +129,31 @@ export default function HistoryPanel({ onReuse, refreshKey }: Props) {
     setDetail(null);
   };
 
-  const handleDelete = async (id: number, e: React.MouseEvent) => {
+  const handleDelete = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm('确定删除这条历史记录？')) return;
-    setDeleting(id);
-    try {
-      const res = await fetch(`/api/resume?id=${id}`, { method: 'DELETE' });
-      const json = await res.json();
-      if (json.ok) {
-        setItems(prev => prev.filter(item => item.id !== id));
-        setTotal(t => t - 1);
-        if (detail?.id === id) setDetail(null);
-      } else {
-        alert(json.error || '删除失败');
-      }
-    } catch {
-      alert('删除失败');
-    } finally {
-      setDeleting(null);
-    }
+    const records = loadRecords();
+    const filtered = records.filter(r => r.id !== id);
+    saveRecords(filtered);
+    if (detail?.id === id) setDetail(null);
+    fetchList(page);
   };
 
-  const handleClearAll = async () => {
+  const handleClearAll = () => {
     if (!confirm('确定清空全部历史记录？此操作不可恢复。')) return;
-    try {
-      const res = await fetch('/api/resume?clear=true', { method: 'DELETE' });
-      const json = await res.json();
-      if (json.ok) {
-        setItems([]);
-        setTotal(0);
-        setTotalPages(1);
-        setPage(1);
-        setDetail(null);
-      } else {
-        alert(json.error || '清空失败');
-      }
-    } catch {
-      alert('清空失败');
-    }
+    saveRecords([]);
+    setItems([]);
+    setTotal(0);
+    setTotalPages(1);
+    setPage(1);
+    setDetail(null);
   };
 
-  const handleView = async (id: number) => {
+  const handleView = (id: number) => {
     if (detail?.id === id) { setDetail(null); return; }
-    try {
-      const res = await fetch(`/api/resume?id=${id}`);
-      const json = await res.json();
-      if (json.ok && json.record) setDetail(json.record);
-    } catch {
-      alert('加载详情失败');
-    }
+    const records = loadRecords();
+    const record = records.find(r => r.id === id) || null;
+    setDetail(record);
   };
 
   const modelLabel = () => 'DeepSeek';
@@ -174,7 +206,7 @@ export default function HistoryPanel({ onReuse, refreshKey }: Props) {
                 <div className="history-item-score" style={{ color: scoreColor(item.score_total) }}>
                   {item.score_total}
                 </div>
-                <button className="btn btn-xs btn-danger" onClick={(e) => handleDelete(item.id, e)} disabled={deleting === item.id} title="删除">✕</button>
+                <button className="btn btn-xs btn-danger" onClick={(e) => handleDelete(item.id, e)} title="删除">✕</button>
               </div>
             ))}
           </div>

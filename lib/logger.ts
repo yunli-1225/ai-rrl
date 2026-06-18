@@ -1,7 +1,15 @@
-import fs from 'fs';
-import path from 'path';
+/** Edge Runtime 兼容的日志模块 — 不支持 fs 的环境回落为仅控制台输出 */
 
-const LOG_FILE = path.join(process.cwd(), 'data', 'logs', 'app.log');
+let hasFs = true;
+let fs: any, path: any;
+let LOG_FILE = '';
+try {
+  fs = require('fs');
+  path = require('path');
+  LOG_FILE = path.join(process.cwd(), 'data', 'logs', 'app.log');
+} catch {
+  hasFs = false;
+}
 
 export enum LogLevel {
   INFO = 'INFO',
@@ -31,6 +39,7 @@ function formatTime(): string {
 }
 
 function writeToFile(entry: LogEntry): void {
+  if (!hasFs) return;
   try {
     const line = JSON.stringify(entry) + '\n';
     fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });

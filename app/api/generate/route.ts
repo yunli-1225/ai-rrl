@@ -1,4 +1,4 @@
-// export const runtime = "edge";
+export const runtime = "edge";
 import { NextRequest, NextResponse } from 'next/server';
 import { GenerateRequestSchema, OptimizedResumeSchema } from '@/lib/schema';
 import { SYSTEM_PROMPT_COMPRESSED, buildFullPrompt } from '@/lib/prompts';

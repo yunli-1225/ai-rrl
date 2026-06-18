@@ -1,10 +1,20 @@
-import { promises as fs } from 'fs';
-import path from 'path';
+/** Edge Runtime 兼容的数据持久化 — 不支持 fs 时回落为纯内存存储 */
+
+let hasFs = true;
+let fs: any, path: any;
+let DATA_DIR = '', DATA_FILE = '';
+try {
+  fs = require('fs');
+  path = require('path');
+  DATA_DIR = path.join(process.cwd(), 'data', 'db');
+  DATA_FILE = path.join(DATA_DIR, 'resume-history.json');
+} catch {
+  hasFs = false;
+}
+
 import { logger } from '@/lib/logger';
 
 const MODULE = 'DB';
-const DATA_DIR = path.join(process.cwd(), 'data', 'db');
-const DATA_FILE = path.join(DATA_DIR, 'resume-history.json');
 
 // ========== 类型定义 ==========
 
@@ -51,34 +61,45 @@ export interface PaginatedResult<T> {
 let store: StoreData | null = null;
 let loaded = false;
 
-async function getStore(): Promise<StoreData> {
-  if (loaded && store) return store;
-  await fs.mkdir(DATA_DIR, { recursive: true });
+async function loadFromFs(): Promise<StoreData | null> {
+  if (!hasFs) return null;
   try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
     const raw = await fs.readFile(DATA_FILE, 'utf-8');
-    store = JSON.parse(raw) as StoreData;
-    // 升级旧数据：补全新字段默认值
+    const data = JSON.parse(raw) as StoreData;
     let upgraded = false;
-    for (const r of store.records) {
+    for (const r of data.records) {
       if (!('model_preference' in r)) { (r as any).model_preference = 'deepseek'; upgraded = true; }
       if (!('rag_keywords' in r)) { (r as any).rag_keywords = []; upgraded = true; }
     }
-    if (upgraded) await persist();
-    loaded = true;
-    logger.info(MODULE, `从文件加载 ${store.records.length} 条记录`);
+    if (upgraded) await persistToFs(data);
+    logger.info(MODULE, `从文件加载 ${data.records.length} 条记录`);
+    return data;
   } catch {
-    store = { version: 2, records: [], nextId: 1, updatedAt: new Date().toISOString() };
-    loaded = true;
-    logger.info(MODULE, '创建新数据库');
+    return null;
   }
+}
+
+async function persistToFs(data: StoreData): Promise<void> {
+  if (!hasFs || !data) return;
+  data.updatedAt = new Date().toISOString();
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch { /* silent */ }
+}
+
+async function getStore(): Promise<StoreData> {
+  if (loaded && store) return store;
+  store = await loadFromFs() || { version: 2, records: [], nextId: 1, updatedAt: new Date().toISOString() };
+  loaded = true;
   return store;
 }
 
 async function persist(): Promise<void> {
   if (!store) return;
   store.updatedAt = new Date().toISOString();
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(store, null, 2), 'utf-8');
+  await persistToFs(store);
 }
 
 // ========== CRUD ==========

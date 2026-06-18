@@ -8,7 +8,7 @@ import GenerateButton from '@/components/GenerateButton';
 import ResumePreview from '@/components/ResumePreview';
 import ImprovementPanel from '@/components/ImprovementPanel';
 import Toolbar from '@/components/Toolbar';
-import HistoryPanel from '@/components/HistoryPanel';
+import HistoryPanel, { saveResumeToLocal } from '@/components/HistoryPanel';
 import KnowledgePanel from '@/components/KnowledgePanel';
 import Skeleton from '@/components/Skeleton';
 import ExperimentPanel from '@/components/ExperimentPanel';
@@ -183,6 +183,16 @@ export default function HomePage() {
           const validated = OptimizedResumeSchema.safeParse(finalData);
           if (validated.success) {
             dispatch({ type: 'GENERATE_SUCCESS', payload: validated.data });
+            saveResumeToLocal({
+              title: validated.data.简历标题 || '未命名简历',
+              resumeJson: JSON.stringify(validated.data),
+              jdText: activeJD,
+              template,
+              userDataJson: JSON.stringify(userData),
+              scoreTotal: validated.data.岗位匹配评分?.总分 || 0,
+              scoreSkill: validated.data.岗位匹配评分?.技能匹配分 || 0,
+              scoreExperience: validated.data.岗位匹配评分?.行业经验分 || 0,
+            });
             setHistoryKey(k => k + 1);
           } else {
             console.log('=== 生成异常诊断 [第一个 validated.success=false] ===');
@@ -211,6 +221,16 @@ export default function HomePage() {
               const revalidated = OptimizedResumeSchema.safeParse(combined);
               if (revalidated.success) {
                 dispatch({ type: 'GENERATE_SUCCESS', payload: revalidated.data });
+                saveResumeToLocal({
+                  title: revalidated.data.简历标题 || '未命名简历',
+                  resumeJson: JSON.stringify(revalidated.data),
+                  jdText: activeJD,
+                  template,
+                  userDataJson: JSON.stringify(userData),
+                  scoreTotal: revalidated.data.岗位匹配评分?.总分 || 0,
+                  scoreSkill: revalidated.data.岗位匹配评分?.技能匹配分 || 0,
+                  scoreExperience: revalidated.data.岗位匹配评分?.行业经验分 || 0,
+                });
                 setHistoryKey(k => k + 1);
               } else {
                 console.log('=== 生成异常诊断 [revalidated.success=false] ===');

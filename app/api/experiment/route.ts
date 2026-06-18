@@ -1,4 +1,4 @@
-// export const runtime = "edge";
+export const runtime = "edge";
 import { NextRequest, NextResponse } from 'next/server';
 import { callDeepSeek, validateEnvOrThrow } from '@/lib/ai/factory';
 import { logger } from '@/lib/logger';
@@ -189,8 +189,8 @@ export async function POST(request: NextRequest) {
         runSingleRound(r, 'experiment', promptParams, userDataStr, jdText, templateName),
       ]);
 
-      const ctrlId = await saveExperimentRecord(ctrlRes.record);
-      const exprId = await saveExperimentRecord(exprRes.record);
+      const ctrlId = await saveExperimentRecord(ctrlRes.record as any);
+      const exprId = await saveExperimentRecord(exprRes.record as any);
       if (ctrlId > 0) savedIds.push(ctrlId);
       if (exprId > 0) savedIds.push(exprId);
 
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const allRecords = await (await import('@/lib/experiment/db')).listExperiments(10000);
+    const allRecords = await (await import('@/lib/experiment/db')).listExperiments();
     const all = allRecords.filter(r => savedIds.includes(r.id));
     const controlRecords = all.filter(r => r.group === 'control');
     const experimentRecords = all.filter(r => r.group === 'experiment');
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const allRecords = await listExperiments(10000);
+    const allRecords = await listExperiments();
     const groups = ['control', 'experiment'] as const;
     const metrics: ExperimentMetrics[] = [];
     for (const g of groups) {
