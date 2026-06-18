@@ -22,24 +22,9 @@ export interface TemplateConfig {
 // 每个模板使用自身 ID 作为 class 前缀（.resume-zh-classic 等）
 // ═══════════════════════════════════════════
 
-// ── ① 央国企·单栏版（zh-classic）──
+// ── ① 央国企·单栏版（zh-classic）——仅保留字体和字号，排版交给全局 CSS ──
 const zhClassicStyle = `
-.resume-zh-classic { font-family: '宋体','SimSun','STSong','Times New Roman',serif; color: #000; max-width: 780px; margin: 0 auto; padding: 10px 18px; font-size: 10px; line-height: 1.4; }
-.resume-zh-classic .resume-header-centered { text-align: center; position: relative; padding: 4px 0 6px; margin-bottom: 6px; border-bottom: 1.5px solid #000; }
-.resume-zh-classic .header-photo-right { position: absolute; top: 0; right: 0; width: 52px; height: 66px; background: #f5f5f5; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-.resume-zh-classic .header-name { font-size: 18px; font-weight: 700; margin-bottom: 1px; }
-.resume-zh-classic .header-subtitle { font-size: 9.5px; color: #333; margin-bottom: 3px; }
-.resume-zh-classic .header-table { margin: 0 auto; font-size: 9px; border-collapse: collapse; }
-.resume-zh-classic .header-table td { padding: 0 8px; color: #333; }
-.resume-zh-classic .header-table td:first-child, .resume-zh-classic .header-table td:nth-child(3) { color: #666; font-weight: 500; text-align: right; }
-.resume-zh-classic .header-table td:nth-child(2), .resume-zh-classic .header-table td:nth-child(4) { text-align: left; }
-.resume-zh-classic .resume-section { margin-bottom: 5px; }
-.resume-zh-classic .resume-section h2 { font-size: 11px; font-weight: 700; border-bottom: 1px solid #999; padding-bottom: 1px; margin: 5px 0 3px; color: #000; }
-.resume-zh-classic .section-body { padding-left: 2px; }
-.resume-zh-classic .section-body p { margin: 1px 0; line-height: 1.4; font-size: 10px; color: #222; }
-.resume-zh-classic .section-body li { margin-left: 14px; padding-left: 1px; line-height: 1.35; font-size: 9.5px; list-style: disc; margin-bottom: 0; color: #222; }
-.resume-zh-classic .section-body .exp-header { font-weight: 600; font-size: 10px; margin: 2px 0 0; color: #000; }
-.resume-zh-classic .section-body .evaluation-text { font-size: 9.5px; line-height: 1.5; color: #333; }
+.resume-zh-classic { font-family: '宋体','SimSun','STSong','Times New Roman',serif; color: #000; max-width: 780px; margin: 0 auto; font-size: 10px; line-height: 1.4; }
 .resume-zh-classic strong { font-weight: 700; }
 `;
 
@@ -62,36 +47,14 @@ const zhSimpleStyle = `
 .resume-zh-simple .sidebar-body p { margin: 0; line-height: 1.3; }
 .resume-zh-simple .sidebar-body ul { padding-left: 0; margin: 0; }
 .resume-zh-simple .sidebar-body li { font-size: 7.5px; margin-left: 8px; list-style: none; margin-bottom: 0; }
-/* 右侧主栏 */
-.resume-zh-simple .main h2 { font-size: 10px; font-weight: 700; border-bottom: 1px solid #999; padding-bottom: 1px; margin: 5px 0 3px; color: #000; }
-.resume-zh-simple .main p { margin: 1px 0; line-height: 1.35; font-size: 9.5px; color: #222; }
-.resume-zh-simple .main li { margin-left: 12px; line-height: 1.3; font-size: 9px; list-style: disc; margin-bottom: 0; }
-/* 经历条目 */
-.resume-zh-simple .exp-name { font-weight: bold; color: #0f172a; }
-.resume-zh-simple .exp-date { text-align: right; color: #64748b; font-size: 0.85em; white-space: nowrap; font-weight: normal; }
-.resume-zh-simple .resume-section { margin-bottom: 4px; }
-.resume-zh-simple .section-body { word-break: break-word; }
+/* 右侧主栏（只保留最小必要样式，排版由全局 CSS 控制） */
+.resume-zh-simple .main { font-size: 9.5px; }
 .resume-zh-simple strong { font-weight: 700; }
 `;
 
-// ── ③ 互联网·单栏版（en-modern）──
+// ── ③ 互联网·单栏版（en-modern）——仅保留字体，排版交给全局 CSS ──
 const enModernStyle = `
-.resume-en-modern { font-family: 'Segoe UI','Helvetica Neue',Arial,sans-serif; color: #000; max-width: 780px; margin: 0 auto; padding: 10px 18px; font-size: 10px; line-height: 1.4; }
-.resume-en-modern .resume-header-centered { text-align: center; position: relative; padding: 4px 0 6px; margin-bottom: 6px; border-bottom: 1.5px solid #000; }
-.resume-en-modern .header-photo-right { position: absolute; top: 0; right: 0; width: 52px; height: 66px; background: #f5f5f5; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-.resume-en-modern .header-name { font-size: 18px; font-weight: 700; margin-bottom: 1px; }
-.resume-en-modern .header-subtitle { font-size: 9.5px; color: #333; margin-bottom: 3px; }
-.resume-en-modern .header-table { margin: 0 auto; font-size: 9px; border-collapse: collapse; }
-.resume-en-modern .header-table td { padding: 0 8px; color: #333; }
-.resume-en-modern .header-table td:first-child, .resume-en-modern .header-table td:nth-child(3) { color: #666; font-weight: 500; text-align: right; }
-.resume-en-modern .header-table td:nth-child(2), .resume-en-modern .header-table td:nth-child(4) { text-align: left; }
-.resume-en-modern .resume-section { margin-bottom: 5px; }
-.resume-en-modern .resume-section h2 { font-size: 11px; font-weight: 700; border-bottom: 1px solid #999; padding-bottom: 1px; margin: 5px 0 3px; color: #000; }
-.resume-en-modern .section-body { padding-left: 2px; }
-.resume-en-modern .section-body p { margin: 1px 0; line-height: 1.4; font-size: 10px; color: #222; }
-.resume-en-modern .section-body li { margin-left: 14px; padding-left: 1px; line-height: 1.35; font-size: 9.5px; list-style: disc; margin-bottom: 0; color: #222; }
-.resume-en-modern .section-body .exp-header { font-weight: 600; font-size: 10px; margin: 2px 0 0; color: #000; }
-.resume-en-modern .section-body .evaluation-text { font-size: 9.5px; line-height: 1.5; color: #333; }
+.resume-en-modern { font-family: 'Segoe UI','Helvetica Neue',Arial,'Noto Sans SC','PingFang SC',sans-serif; color: #000; max-width: 780px; margin: 0 auto; font-size: 10px; line-height: 1.4; }
 .resume-en-modern strong { font-weight: 700; }
 `;
 
@@ -114,15 +77,8 @@ const enCreativeStyle = `
 .resume-en-creative .sidebar-body p { margin: 0; line-height: 1.3; }
 .resume-en-creative .sidebar-body ul { padding-left: 0; margin: 0; }
 .resume-en-creative .sidebar-body li { font-size: 7.5px; margin-left: 8px; list-style: none; margin-bottom: 0; }
-/* 右侧主栏 */
-.resume-en-creative .main h2 { font-size: 10px; font-weight: 700; border-bottom: 1px solid #94a3b8; padding-bottom: 1px; margin: 5px 0 3px; color: #0f172a; }
-.resume-en-creative .main p { margin: 1px 0; line-height: 1.35; font-size: 9.5px; color: #334155; }
-.resume-en-creative .main li { margin-left: 12px; line-height: 1.3; font-size: 9px; list-style: disc; margin-bottom: 0; }
-/* 经历条目 */
-.resume-en-creative .exp-name { font-weight: bold; color: #0f172a; }
-.resume-en-creative .exp-date { text-align: right; color: #64748b; font-size: 0.85em; white-space: nowrap; font-weight: normal; }
-.resume-en-creative .resume-section { margin-bottom: 4px; }
-.resume-en-creative .section-body { word-break: break-word; }
+/* 右侧主栏（只保留最小必要样式，排版由全局 CSS 控制） */
+.resume-en-creative .main { font-size: 9.5px; }
 .resume-en-creative strong { font-weight: 700; }
 `;
 

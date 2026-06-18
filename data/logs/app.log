@@ -1759,3 +1759,7 @@
 {"time":"2026-06-18 03:32:00.602","level":"INFO","module":"AI","message":"DeepSeek 流式调用完成","data":{"latency":"19693ms","chars":3669,"tokens":5172}}
 {"time":"2026-06-18 03:32:00.611","level":"INFO","module":"DB","message":"从文件加载 39 条记录"}
 {"time":"2026-06-18 03:32:00.620","level":"INFO","module":"DB","message":"SAVE id=40 title=\"李芸 - AI产品实习生简历\" 评分=79 模型=deepseek","data":{"latency":"12ms"}}
+{"time":"2026-06-18 12:45:05.923","level":"INFO","module":"AI","message":"环境变量校验通过"}
+{"time":"2026-06-18 12:45:05.927","level":"INFO","module":"AI","message":"环境变量校验通过"}
+{"time":"2026-06-18 12:45:06.741","level":"INFO","module":"AI","message":"环境变量校验通过"}
+{"time":"2026-06-18 12:45:06.750","level":"INFO","module":"AI","message":"环境变量校验通过"}

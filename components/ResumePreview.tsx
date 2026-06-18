@@ -12,11 +12,16 @@ const SECTION_HEADERS: Record<string, string> = {
   '专业技能': 'skills',
   '实习/工作经历': 'work',
   '实习经历': 'work',
+  '工作经历': 'work',
   '项目经历': 'project',
+  '项目经验': 'project',
   '教育经历': 'education',
   '教育背景': 'education',
   '教育': 'education',
+  '学校经历': 'education',
   '个人评价': 'evaluation',
+  '自我评价': 'evaluation',
+  '个人总结': 'evaluation',
 };
 
 /** 模块标识符 → 中文标题 */
@@ -76,6 +81,11 @@ function parseResumeSections(text: string): Map<string, string> {
   } else {
     console.error('=== parseResumeSections 未找到任何模块标题 ===');
     console.error('文本前200字:', text.slice(0, 200));
+  }
+  // 如果未找到任何标题但文本不为空，将整个文本作为"专业技能"内容
+  if (headerPositions.length === 0 && text.trim().length > 50) {
+    console.warn('=== parseResumeSections 使用兜底：整段文本作为专业技能 ===');
+    headerPositions.push({ header: '专业技能', moduleKey: 'skills', pos: 0 });
   }
 
   for (let i = 0; i < headerPositions.length; i++) {
@@ -207,7 +217,7 @@ export default function ResumePreview({ result, templateId }: Props) {
     const photoUrl = resumeData['照片'] || '';
 
     const renderSection = (key: string): string => {
-      if (key === 'evaluation' && !showEval) return '';
+      if (key === 'evaluation' && !showEval && tpl?.layout !== 'single') return '';
       if (hiddenModules.has(key)) return '';
       const content = sections.get(key);
       if (!content || !content.trim()) return '';
@@ -367,11 +377,11 @@ export default function ResumePreview({ result, templateId }: Props) {
         /* 圆点列表 — 标准 disc + inside 定位，统一行高 */
         :global(ul.resume-bullet-list) { list-style: disc; list-style-position: inside; padding-left: 0.5em; margin: 4px 0 8px 0; }
         :global(ul.resume-bullet-list li) { margin-bottom: 3px; line-height: 1.75; color: #1e293b; word-break: break-word; overflow-wrap: break-word; }
-        :global(.resume-section) { margin-bottom: 12px; }
+        :global(.resume-section) { margin-bottom: 12px !important; }
         :global(.section-body) { word-break: break-word; overflow-wrap: break-word; }
         /* 超长文本自动截断+省略号 */
         :global(.resume-preview-area) { overflow-x: hidden; }
-        :global(.resume-section h2) { font-size: 0.95rem; font-weight: 700; padding-top: 10px; border-top: 4px solid #000 !important; margin: 16px 0; }
+        :global(.resume-section h2) { font-size: 0.95rem; font-weight: 700; padding-top: 10px; border-top: 4px solid #000 !important; margin: 16px 0 !important; }
         /* 单栏无衬线字体 */
         :global(.resume-preview-area) { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', 'PingFang SC', sans-serif; }
         :global(.resume-preview-area strong), :global(.resume-preview-area b) { font-weight: 700; color: #0f172a; }
