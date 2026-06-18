@@ -1,8 +1,0 @@
-{
-  "framework": "nextjs",
-  "buildCommand": "next build",
-  "installCommand": "npm install",
-  "env": {
-    "DEEPSEEK_API_KEY": "@deepseek_api_key"
-  }
-}
